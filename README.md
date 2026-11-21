@@ -14,8 +14,9 @@ In this lab, you'll design and implement a Python Command-Line Interface (CLI) t
 
 The CLI tool will allow users to:
 
-- Add tasks to a user account via `add-task`
-- Mark tasks as complete via `complete-task`
+- Add tasks to a user account via `add` (or `add-task`)
+- List a user's tasks via `list`
+- Mark tasks as complete via `complete` (or `complete-task`)
 - Display feedback directly in the terminal
 
 This lab combines CLI architecture with OOP principles to help you build intuitive and testable developer tools.
@@ -109,64 +110,29 @@ class User:
 
 #### Step 2: Create the CLI in `lib/cli_tool.py`
 
-```python
-import argparse
-from lib.models import Task, User
-
-users = {}
-
-def add_task(args):
-    user = users.get(args.user) or User(args.user)
-    users[args.user] = user
-    task = Task(args.title)
-    user.add_task(task)
-
-def complete_task(args):
-    user = users.get(args.user)
-    if user:
-        for task in user.tasks:
-            if task.title == args.title:
-                task.complete()
-                return
-        print("❌ Task not found.")
-    else:
-        print("❌ User not found.")
-
-def main():
-    parser = argparse.ArgumentParser(description="Task Manager CLI")
-    subparsers = parser.add_subparsers()
-
-    add_parser = subparsers.add_parser("add-task", help="Add a new task")
-    add_parser.add_argument("user")
-    add_parser.add_argument("title")
-    add_parser.set_defaults(func=add_task)
-
-    complete_parser = subparsers.add_parser("complete-task", help="Complete a task")
-    complete_parser.add_argument("user")
-    complete_parser.add_argument("title")
-    complete_parser.set_defaults(func=complete_task)
-
-    args = parser.parse_args()
-    if hasattr(args, "func"):
-        args.func(args)
-    else:
-        parser.print_help()
-
-if __name__ == "__main__":
-    main()
-```
+The `TaskManager` controller owns the in-memory user collection. Its `add_task`,
+`list_tasks`, and `complete_task` methods are registered directly as the
+`argparse` subcommand handlers, keeping command routing separate from the
+`Task` and `User` models.
 
 ---
 
 ### Task 4: Run and Test the CLI Tool
 
 ```bash
-# Add a task
-python lib/cli_tool.py add-task Alice "Write unit tests"
-
-# Complete a task
-python lib/cli_tool.py complete-task Alice "Write unit tests"
+# Start an interactive session, then enter commands at the prompt
+python -m lib.cli_tool
+task-manager> add Alice "Write unit tests"
+task-manager> list Alice
+task-manager> complete Alice "Write unit tests"
+task-manager> list Alice
+task-manager> exit
 ```
+
+The aliases `add-task`, `list-tasks`, and `complete-task` are also accepted.
+Tasks stay in memory during the interactive session and are cleared when it
+ends. A single command can also be run directly, for example
+`python -m lib.cli_tool add Alice "Write unit tests"`.
 
 ---
 
